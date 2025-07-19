@@ -514,7 +514,7 @@ class _PersonalizationDemoScreenState extends State<PersonalizationDemoScreen> {
         color: AppTheme.surfaceColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadBox(
+          BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
