@@ -13,11 +13,14 @@ class TrustService {
   Timer? _trustUpdateTimer;
   double _currentTrustScore = 85.0;
   TrustLevel _currentTrustLevel = TrustLevel.high;
+  BehavioralData? _latestBehavioralData;
   
   TrustService(this._behavioralService, this._apiService);
   
   Stream<TrustData> get trustStream => _trustController.stream;
   final StreamController<TrustData> _trustController = StreamController<TrustData>.broadcast();
+  
+  BehavioralData? getLatestBehavioralData() => _latestBehavioralData;
   
   void startTrustMonitoring() {
     _behavioralService.startMonitoring();
@@ -36,6 +39,7 @@ class TrustService {
   Future<void> _updateTrustScore() async {
     try {
       final behavioralData = _behavioralService.generateBehavioralData();
+      _latestBehavioralData = behavioralData;
       final trustData = await _apiService.calculateTrustScore(behavioralData);
       
       _currentTrustScore = trustData.trustScore;

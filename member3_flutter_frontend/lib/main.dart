@@ -10,6 +10,8 @@ import 'features/authentication/screens/login_screen.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/trust_monitor/providers/trust_provider.dart';
 import 'features/authentication/providers/auth_provider.dart';
+import 'features/personalization/providers/personalization_provider.dart';
+import 'core/services/personalization_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +38,14 @@ class NethraBankingApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => TrustProvider()),
+        Provider(create: (_) => PersonalizationService()),
+        ChangeNotifierProxyProvider<PersonalizationService, PersonalizationProvider>(
+          create: (context) => PersonalizationProvider(
+            Provider.of<PersonalizationService>(context, listen: false),
+          ),
+          update: (context, personalizationService, previous) => 
+            PersonalizationProvider(personalizationService),
+        ),
         Provider(create: (_) => ApiService()),
         Provider(create: (_) => BehavioralService()),
         ProxyProvider2<BehavioralService, ApiService, TrustService>(

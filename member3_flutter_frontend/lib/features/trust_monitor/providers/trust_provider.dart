@@ -3,10 +3,12 @@ import 'dart:async';
 import '../../../core/services/trust_service.dart';
 import '../../../core/services/behavioral_service.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/services/personalization_service.dart';
 import '../../../shared/models/trust_data.dart';
 
 class TrustProvider with ChangeNotifier {
   late final TrustService _trustService;
+  late final PersonalizationService _personalizationService;
   StreamSubscription<TrustData>? _trustSubscription;
   
   double _trustScore = 85.0;
@@ -14,11 +16,16 @@ class TrustProvider with ChangeNotifier {
   List<String> _riskFactors = [];
   bool _isMonitoring = false;
   bool _shouldShowMirage = false;
+  bool _isPersonalized = false;
+  double _personalizedTrustScore = 85.0;
+  double _standardTrustScore = 85.0;
   
   TrustProvider() {
     final behavioralService = BehavioralService();
     final apiService = ApiService();
     _trustService = TrustService(behavioralService, apiService);
+    _personalizationService = PersonalizationService();
+    _initializePersonalization();
   }
   
   double get trustScore => _trustScore;
@@ -26,6 +33,15 @@ class TrustProvider with ChangeNotifier {
   List<String> get riskFactors => _riskFactors;
   bool get isMonitoring => _isMonitoring;
   bool get shouldShowMirage => _shouldShowMirage;
+  bool get isPersonalized => _isPersonalized;
+  double get personalizedTrustScore => _personalizedTrustScore;
+  double get standardTrustScore => _standardTrustScore;
+  
+  Future<void> _initializePersonalization() async {
+    await _personalizationService.initialize();
+    _isPersonalized = !_personalizationService.isLearningPhase;
+    notifyListeners();
+  }
   
   void startMonitoring() {
     if (_isMonitoring) return;
@@ -34,7 +50,7 @@ class TrustProvider with ChangeNotifier {
     _trustService.startTrustMonitoring();
     
     _trustSubscription = _trustService.trustStream.listen((trustData) {
-      _trustScore = trustData.trustScore;
+      _updateTrustScores(trustData);
       _trustLevel = trustData.trustLevel;
       _riskFactors = trustData.riskFactors;
       _shouldShowMirage = _trustScore < 50;
@@ -52,6 +68,27 @@ class TrustProvider with ChangeNotifier {
     });
     
     notifyListeners();
+  }
+  
+  Future<void> _updateTrustScores(TrustData trustData) async {
+    _standardTrustScore = trustData.trustScore;
+    
+    // Get personalized trust score if available
+    try {
+      final behavioralData = _trustService.getLatestBehavioralData();
+      if (behavioralData != null) {
+        final result = await _personalizationService.calculatePersonalizedTrust(behavioralData);
+        _personalizedTrustScore = result.personalizedTrustScore;
+        _isPersonalized = !result.isLearningPhase;
+        
+        // Use personalized score as the main trust score
+        _trustScore = _personalizedTrustScore;
+      } else {
+        _trustScore = _standardTrustScore;
+      }
+    } catch (e) {
+      _trustScore = _standardTrustScore;
+    }
   }
   
   void stopMonitoring() {

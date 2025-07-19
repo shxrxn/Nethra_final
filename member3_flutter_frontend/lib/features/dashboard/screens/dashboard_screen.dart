@@ -13,6 +13,7 @@ import '../../trust_monitor/screens/trust_monitor_screen.dart';
 import '../../transactions/screens/transactions_screen.dart';
 import '../../mirage_interface/screens/mirage_screen.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../personalization/screens/personalization_demo_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -64,6 +65,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ],
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PersonalizationDemoScreen(),
+                ),
               );
             },
           ),
