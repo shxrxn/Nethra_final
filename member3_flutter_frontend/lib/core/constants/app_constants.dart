@@ -20,6 +20,12 @@ class AppConstants {
   static const String demoPassword = 'demo123';
   static const double demoAccountBalance = 25750.50;
   
+  // Personalization Settings
+  static const int minLearningInteractions = 20;
+  static const int fullLearningInteractions = 50;
+  static const double personalizedThresholdMultiplier = 1.5;
+  static const double adaptationRate = 0.1;
+  
   // App Colors
   static const int primaryColorValue = 0xFF1E88E5;
   static const int successColorValue = 0xFF4CAF50;
