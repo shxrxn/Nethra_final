@@ -1,0 +1,25 @@
+# Ignore virtual environment
+nethra_env/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs and runtime files
+*.log
+*.sqlite3
+
+# Environment variables
+.env
+
+# macOS system file
+.DS_Store
+
+# IDE configs
+.idea/
+.vscode/
+
+# Model files
+model/*.tflite
