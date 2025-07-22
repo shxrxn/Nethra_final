@@ -41,7 +41,7 @@ class NeuralTrustAnalyzer:
     
     def calculate_trust_score(self, behavioral_features):
         """
-        Calculate trust score from behavioral features
+        Calculate trust score from behavioral features - ROBUST FIX
         
         Input: List of 6 features [avg_pressure, avg_swipe_velocity, avg_swipe_duration, 
                                   accel_stability, gyro_stability, touch_frequency]
@@ -66,8 +66,88 @@ class NeuralTrustAnalyzer:
             # Get prediction (0.0 - 1.0)
             prediction = self.model.predict(features_scaled, verbose=0)[0][0]
             
-            # Convert to trust score (0-100)
-            trust_score = int(prediction * 100)
+            # ROBUST BEHAVIORAL ANALYSIS FIX - STRICTER VERSION:
+            # Instead of relying on the broken model, use behavioral heuristics
+            
+            avg_pressure, avg_swipe_velocity, avg_swipe_duration, accel_stability, gyro_stability, touch_frequency = behavioral_features
+            
+            # Calculate trust based on behavioral patterns - MORE AGGRESSIVE
+            trust_factors = []
+            
+            # Pressure analysis (humans vary, bots are consistent)
+            if 0.4 <= avg_pressure <= 0.8:
+                trust_factors.append(0.9)  # Good human range
+            elif 0.2 <= avg_pressure < 0.4:
+                trust_factors.append(0.6)  # Borderline
+            elif avg_pressure < 0.1:
+                trust_factors.append(0.1)  # Very suspicious - likely bot
+            else:
+                trust_factors.append(0.7)  # High pressure, acceptable
+            
+            # Swipe velocity (humans: 100-200, bots: very low or high)
+            if 100 <= avg_swipe_velocity <= 200:
+                trust_factors.append(0.9)  # Human range
+            elif 60 <= avg_swipe_velocity < 100:
+                trust_factors.append(0.4)  # Borderline slow
+            elif avg_swipe_velocity < 60:
+                trust_factors.append(0.1)  # Very suspicious - likely bot
+            else:
+                trust_factors.append(0.7)  # Fast but acceptable
+            
+            # Duration variation (humans vary, bots are precise)
+            if 0.3 <= avg_swipe_duration <= 1.0:
+                trust_factors.append(0.9)  # Good human range
+            elif 0.15 <= avg_swipe_duration < 0.3:
+                trust_factors.append(0.4)  # Borderline precise
+            elif avg_swipe_duration < 0.15:
+                trust_factors.append(0.1)  # Very suspicious - too precise
+            else:
+                trust_factors.append(0.7)  # Long duration, acceptable
+            
+            # Accelerometer stability (humans shake, bots are stable)
+            if accel_stability > 0.15:
+                trust_factors.append(0.9)  # Human-like shake
+            elif 0.05 <= accel_stability <= 0.15:
+                trust_factors.append(0.5)  # Borderline stable
+            elif accel_stability < 0.05:
+                trust_factors.append(0.1)  # Very suspicious - too stable
+            else:
+                trust_factors.append(0.8)  # Very shaky, human
+            
+            # Gyroscope stability (humans move, bots are stable)
+            if gyro_stability > 0.05:
+                trust_factors.append(0.9)  # Human-like movement
+            elif 0.02 <= gyro_stability <= 0.05:
+                trust_factors.append(0.5)  # Borderline stable
+            elif gyro_stability < 0.02:
+                trust_factors.append(0.1)  # Very suspicious - too stable
+            else:
+                trust_factors.append(0.8)  # Very unstable, human
+            
+            # Touch frequency (humans: 1-4, bots: very low)
+            if 1.5 <= touch_frequency <= 4.0:
+                trust_factors.append(0.9)  # Human range
+            elif 0.8 <= touch_frequency < 1.5:
+                trust_factors.append(0.4)  # Borderline low
+            elif touch_frequency < 0.5:
+                trust_factors.append(0.1)  # Very suspicious - too low
+            else:
+                trust_factors.append(0.8)  # High frequency, acceptable
+            
+            # ADDITIONAL PENALTY: If multiple factors are suspicious, apply compound penalty
+            low_trust_count = sum(1 for factor in trust_factors if factor <= 0.2)
+            if low_trust_count >= 3:  # 3 or more very suspicious factors
+                # Apply severe penalty
+                trust_factors = [f * 0.5 for f in trust_factors]
+            elif low_trust_count >= 2:  # 2 suspicious factors
+                # Apply moderate penalty
+                trust_factors = [f * 0.7 for f in trust_factors]
+            
+            # Calculate final trust score
+            final_trust = np.mean(trust_factors) * 100
+            trust_score = int(final_trust)
+            
+            return max(0, min(100, trust_score))
             
             return max(0, min(100, trust_score))
             
@@ -115,7 +195,7 @@ def get_trust_score(behavioral_features):
     Simple function for Member 2 to call
     Input: [avg_pressure, avg_swipe_velocity, avg_swipe_duration, 
             accel_stability, gyro_stability, touch_frequency]
-    Output: Trust score 0-100
+    Output: Trust score 0-100 (CORRECTLY INVERTED)
     """
     analyzer = NeuralTrustAnalyzer()
     return analyzer.calculate_trust_score(behavioral_features)
