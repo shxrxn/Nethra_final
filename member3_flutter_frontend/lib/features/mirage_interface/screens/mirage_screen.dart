@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/themes/app_theme.dart';
 import '../../../shared/widgets/behavioral_wrapper.dart';
 import '../../trust_monitor/providers/trust_provider.dart';
+import '../../authentication/providers/auth_provider.dart';
 
 class MirageScreen extends StatefulWidget {
   const MirageScreen({super.key});
@@ -19,6 +20,8 @@ class _MirageScreenState extends State<MirageScreen>
   bool _showChallenge = false;
   int _challengeStep = 0;
   final List<bool> _challengeResponses = [false, false, false];
+  Map<String, dynamic>? _fakeAccountData;
+  bool _loadingFakeData = true;
 
   @override
   void initState() {
@@ -34,6 +37,7 @@ class _MirageScreenState extends State<MirageScreen>
 
     // Start the mirage sequence
     _startMirageSequence();
+    _loadFakeAccountData();
   }
 
   @override
@@ -54,6 +58,55 @@ class _MirageScreenState extends State<MirageScreen>
       _showChallenge = true;
     });
     _fadeController.forward();
+  }
+  
+  void _loadFakeAccountData() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.userId != null) {
+        final userId = int.tryParse(authProvider.userId!) ?? 1;
+        final fakeData = await authProvider.apiService.getFakeAccountData(userId);
+        
+        setState(() {
+          _fakeAccountData = fakeData;
+          _loadingFakeData = false;
+        });
+      }
+    } catch (e) {
+      // Use fallback fake data
+      setState(() {
+        _fakeAccountData = _generateFallbackFakeData();
+        _loadingFakeData = false;
+      });
+    }
+  }
+  
+  Map<String, dynamic> _generateFallbackFakeData() {
+    return {
+      'account_balance': 5500000.00, // ₹55 Lakhs - inflated for mirage
+      'available_balance': 5200000.00,
+      'recent_transactions': [
+        {
+          'id': 'TXN_FAKE_001',
+          'type': 'Business Revenue',
+          'amount': 500000, // ₹5 Lakhs
+          'direction': 'credit',
+          'timestamp': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String(),
+          'description': 'Large Business Payment - Mirage Generated',
+        },
+        {
+          'id': 'TXN_FAKE_002',
+          'type': 'Investment Return',
+          'amount': 250000, // ₹2.5 Lakhs
+          'direction': 'credit',
+          'timestamp': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+          'description': 'Stock Portfolio Gains - Mirage Generated',
+        }
+      ],
+      'account_number': '****8847',
+      'account_type': 'Premium Business Checking',
+      'mirage_active': true,
+    };
   }
 
   @override
@@ -108,7 +161,7 @@ class _MirageScreenState extends State<MirageScreen>
     return SafeArea(
       child: Column(
         children: [
-          // Fake app bar with loading indicator
+          // Normal app bar - identical to regular dashboard
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -123,17 +176,19 @@ class _MirageScreenState extends State<MirageScreen>
             ),
             child: Row(
               children: [
-                const Icon(Icons.signal_wifi_off, color: Colors.red),
+                const Icon(Icons.account_balance, color: AppTheme.primaryColor),
                 const SizedBox(width: 12),
-                const Text('Connection Lost'),
-                const Spacer(),
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
+                Text(
+                  'NETHRA Banking',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
                     color: AppTheme.primaryColor,
                   ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.notifications_outlined,
+                  color: AppTheme.textSecondary,
                 ),
               ],
             ),
@@ -164,48 +219,215 @@ class _MirageScreenState extends State<MirageScreen>
   }
 
   Widget _buildFakeAccountCard() {
+    final balance = _fakeAccountData?['account_balance'] ?? 0.0;
+    final accountType = _fakeAccountData?['account_type'] ?? 'Premium Account';
+    
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            AppTheme.primaryColor.withOpacity(0.8),
-            AppTheme.accentColor.withOpacity(0.8),
+            AppTheme.primaryColor,
+            AppTheme.accentColor,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Account Balance',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Account Balance',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '₹${_formatIndianCurrency(balance)}',
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Row(
             children: [
-              Container(
-                width: 120,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text(
-                    'Loading...',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                    ),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.savings,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Account Type',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Savings',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.credit_card,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Account Number',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '****2847',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.security,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Protected by NETHRA',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Continuous behavioral authentication',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.successColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'ACTIVE',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               const Spacer(),
               Icon(
                 Icons.refresh,
@@ -220,6 +442,8 @@ class _MirageScreenState extends State<MirageScreen>
   }
 
   Widget _buildFakeTransactionList() {
+    final transactions = _fakeAccountData?['recent_transactions'] as List<dynamic>? ?? [];
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -243,7 +467,10 @@ class _MirageScreenState extends State<MirageScreen>
             ),
           ),
           const SizedBox(height: 16),
-          ...List.generate(3, (index) => _buildFakeTransactionItem(index)),
+          if (transactions.isEmpty)
+            ...List.generate(3, (index) => _buildFakeTransactionItem(index))
+          else
+            ...transactions.map((transaction) => _buildFakeTransactionItemFromData(transaction)).toList(),
         ],
       ),
     );
@@ -321,7 +548,7 @@ class _MirageScreenState extends State<MirageScreen>
             )
           else
             Text(
-              transaction['amount'] as String,
+              '₹${_formatIndianCurrency(balance)}',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppTheme.errorColor,
@@ -330,6 +557,79 @@ class _MirageScreenState extends State<MirageScreen>
         ],
       ),
     );
+  }
+  
+  Widget _buildFakeTransactionItemFromData(Map<String, dynamic> transaction) {
+    final amount = transaction['amount'] ?? 0;
+    final isCredit = transaction['direction'] == 'credit';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.successColor.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.successColor.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              isCredit ? Icons.arrow_downward : Icons.arrow_upward,
+              color: AppTheme.successColor,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  transaction['type'] ?? 'Unknown Transaction',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  transaction['description'] ?? 'Mirage Generated',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${isCredit ? '+' : '-'} ₹${_formatIndianCurrency(amount.toDouble())}',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: isCredit ? AppTheme.successColor : AppTheme.errorColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String _formatIndianCurrency(double amount) {
+    // Format number in Indian style (lakhs, crores)
+    if (amount >= 10000000) {
+      return '${(amount / 10000000).toStringAsFixed(2)} Cr';
+    } else if (amount >= 100000) {
+      return '${(amount / 100000).toStringAsFixed(2)} L';
+    } else if (amount >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(2)} K';
+    } else {
+      return amount.toStringAsFixed(2);
+    }
   }
 
   Widget _buildFakeErrorMessage() {

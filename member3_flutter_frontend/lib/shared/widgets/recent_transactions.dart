@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/themes/app_theme.dart';
+import '../../core/constants/app_constants.dart';
 
 class RecentTransactions extends StatelessWidget {
   const RecentTransactions({super.key});
@@ -11,28 +12,28 @@ class RecentTransactions extends StatelessWidget {
       {
         'title': 'Coffee Shop',
         'subtitle': 'Today, 2:30 PM',
-        'amount': '-\$4.50',
+        'amount': -450.0,
         'icon': Icons.local_cafe,
         'color': AppTheme.warningColor,
       },
       {
         'title': 'Salary Deposit',
         'subtitle': 'Yesterday, 9:00 AM',
-        'amount': '+\$3,200.00',
+        'amount': 320000.0,
         'icon': Icons.work,
         'color': AppTheme.successColor,
       },
       {
         'title': 'Online Shopping',
         'subtitle': 'Dec 8, 2024',
-        'amount': '-\$89.99',
+        'amount': -8999.0,
         'icon': Icons.shopping_cart,
         'color': AppTheme.errorColor,
       },
       {
         'title': 'Transfer from John',
         'subtitle': 'Dec 7, 2024',
-        'amount': '+\$250.00',
+        'amount': 25000.0,
         'icon': Icons.person,
         'color': AppTheme.accentColor,
       },
@@ -65,7 +66,35 @@ class RecentTransactions extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  // Navigate to full transaction history
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Row(
+                        children: [
+                          Icon(Icons.history, color: AppTheme.primaryColor),
+                          SizedBox(width: 12),
+                          Text('Transaction History'),
+                        ],
+                      ),
+                      content: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Full transaction history feature is coming soon!'),
+                          SizedBox(height: 16),
+                          Text(
+                            'This would show your complete transaction history with filtering and export options.',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Got it'),
+                        ),
+                      ],
+                    ),
+                  );
                 },
                 child: Text(
                   'View All',
@@ -96,6 +125,9 @@ class RecentTransactions extends StatelessWidget {
     BuildContext context, {
     required Map<String, dynamic> transaction,
   }) {
+    final amount = transaction['amount'] as double;
+    final isCredit = amount > 0;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -143,16 +175,27 @@ class RecentTransactions extends StatelessWidget {
             ),
           ),
           Text(
-            transaction['amount'] as String,
+            '${isCredit ? '+' : ''}${AppConstants.currencySymbol}${_formatIndianCurrency(amount.abs())}',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: (transaction['amount'] as String).startsWith('+')
-                  ? AppTheme.successColor
-                  : AppTheme.errorColor,
+              color: isCredit ? AppTheme.successColor : AppTheme.errorColor,
             ),
           ),
         ],
       ),
     );
+  }
+  
+  String _formatIndianCurrency(double amount) {
+    // Format number in Indian style (lakhs, crores)
+    if (amount >= 10000000) {
+      return '${(amount / 10000000).toStringAsFixed(2)} Cr';
+    } else if (amount >= 100000) {
+      return '${(amount / 100000).toStringAsFixed(2)} L';
+    } else if (amount >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(2)} K';
+    } else {
+      return amount.toStringAsFixed(2);
+    }
   }
 }

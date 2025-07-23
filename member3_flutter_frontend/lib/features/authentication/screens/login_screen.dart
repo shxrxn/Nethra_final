@@ -1,13 +1,15 @@
+// lib/features/authentication/screens/login_screen.dart (Updated)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/themes/app_theme.dart';
-import '../../../core/services/behavioral_service.dart';
 import '../providers/auth_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/behavioral_wrapper.dart';
+import '../screens/register_screen.dart';
+import '../../demo/screens/demo_user_selector_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,6 +23,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Initialize auth provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AuthProvider>(context, listen: false).initialize();
+    });
+  }
   
   @override
   void dispose() {
@@ -50,6 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   _buildLoginForm(),
                   const SizedBox(height: 24),
                   _buildLoginButton(),
+                  const SizedBox(height: 16),
+                  _buildForgotPasswordButton(),
+                  const SizedBox(height: 16),
+                  _buildRegisterButton(),
+                  const SizedBox(height: 24),
+                  _buildDemoButton(),
                   const SizedBox(height: 16),
                   _buildDemoInfo(),
                   const SizedBox(height: 32),
@@ -176,6 +193,135 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
   
+  Widget _buildRegisterButton() {
+    return TextButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RegisterScreen()),
+        );
+      },
+      child: Text(
+        'Don\'t have an account? Register here',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: AppTheme.primaryColor,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ).animate().fadeIn(delay: 1200.ms);
+  }
+  
+  Widget _buildForgotPasswordButton() {
+    return TextButton(
+      onPressed: () {
+        _showForgotPasswordDialog();
+      },
+      child: Text(
+        'Forgot Password?',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: AppTheme.textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ).animate().fadeIn(delay: 1150.ms);
+  }
+  
+  void _showForgotPasswordDialog() {
+    final TextEditingController emailController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter your email address to receive password reset instructions.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email Address',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final email = emailController.text.trim();
+              if (email.isEmpty || !email.contains('@')) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a valid email address'),
+                    backgroundColor: AppTheme.errorColor,
+                  ),
+                );
+                return;
+              }
+              
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Password reset instructions sent to $email'),
+                  backgroundColor: AppTheme.successColor,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+              emailController.dispose();
+            },
+            child: const Text('Send Reset Link'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDemoButton() {
+    return Container(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const DemoUserSelectorScreen(),
+            ),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.accentColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.science, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Try Demo Mode',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().slideY(delay: 1250.ms, begin: 0.3);
+  }
+  
   Widget _buildDemoInfo() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -212,6 +358,14 @@ class _LoginScreenState extends State<LoginScreen> {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontFamily: 'monospace',
               color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Or use Demo Mode to experience different user behavioral patterns without authentication.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],
@@ -266,8 +420,8 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (success) {
         if (context.mounted) {
-          // Login successful, AuthProvider will handle navigation
           HapticFeedback.heavyImpact();
+          // Navigation will be handled by main.dart based on auth state
         }
       } else {
         if (context.mounted) {
