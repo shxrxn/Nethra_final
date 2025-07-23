@@ -20,7 +20,6 @@ NETHRA is a privacy-first mobile banking security system that continuously authe
 - **SQLite**: WAL-optimized lightweight database
 - **TensorFlow/Keras**: Neural Networks model for trust scoring
 - **JWT + AES**: Secure sessions and encrypted data
-- **Prometheus + Grafana**: Real-time system monitoring and analytics
 
 ### Frontend Tech
 - **Flutter**: Cross-platform (Android + iOS)
