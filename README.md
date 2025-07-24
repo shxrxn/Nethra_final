@@ -1,8 +1,15 @@
-# 🔐 NETHRA: Personalized AI Security for Mobile Banking
+# NETHRA: Personalized AI Security for Mobile Banking
 
 NETHRA is a privacy-first mobile banking security system that continuously authenticates users using behavioral biometrics (e.g., tap, swipe, tilt). When anomalies are detected, it deploys an Adaptive Mirage Interface—a deceptive fake UI with misleading data and cognitive micro-challenges to confuse attackers, all while safeguarding the user's account.
 
-## 🎯 Key Features
+## Authors
+
+- Built for the Canara Bank SuRaksha Cyber Hackathon (2025), by:
+    - Amrutha Sharon
+    - Prerana Midde
+    - Pranav Vinod Pillai
+
+## Key Features
 
 - **TrustProfile**: Learns user behavior (touch, swipe, motion) and detects anomalies
 - **TrustIndex (0–100)**: Real-time behavioral trust meter—green/yellow/red zones
@@ -13,7 +20,7 @@ NETHRA is a privacy-first mobile banking security system that continuously authe
 - **Federated Learning**: On-device private model updates (no cloud data exposure)
 - **Energy Efficient**: AI optimized to use <2.5% battery on older phones
 
-## 🏗️ Architecture
+## Architecture
 
 ### Backend Intelligence (Guardian AI)
 - **FastAPI**: Asynchronous Python backend with real-time APIs
@@ -27,7 +34,7 @@ NETHRA is a privacy-first mobile banking security system that continuously authe
 - **Real-time Integration**: Live trust scoring and behavioral monitoring
 - **Adaptive UI**: Dynamic mirage interface activation
 
-## 📡 API Integration
+## API Integration
 
 ### Authentication Endpoints
 - `POST /api/auth/login` - User authentication
@@ -54,7 +61,7 @@ NETHRA is a privacy-first mobile banking security system that continuously authe
 - `GET /api/monitoring/health` - System health check
 - `GET /api/monitoring/metrics` - System performance metrics
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.8+ with pip
@@ -84,7 +91,7 @@ flutter run
 - **Username**: `demo_user`
 - **Password**: `demo123`
 
-## 🎮 Demo Features
+## Demo Features
 
 ### 1. Real-time Trust Monitoring
 - Login with demo credentials
@@ -106,7 +113,7 @@ flutter run
 - Trust prediction analytics
 - Session management and security events
 
-## 🔧 Configuration
+## Configuration
 
 ### Backend Configuration
 Edit `backend/config.py` for:
@@ -122,7 +129,7 @@ Edit `member3_flutter_frontend/lib/core/constants/app_constants.dart` for:
 - Demo settings
 - Update intervals
 
-## 🛠️ Development
+## Development
 
 ### Backend Development
 ```bash
@@ -139,7 +146,7 @@ flutter run --hot-reload
 ### API Documentation
 Visit `http://localhost:8000/docs` for interactive API documentation
 
-## 🧪 Testing
+## Testing
 
 ### Backend Testing
 ```bash
@@ -154,7 +161,7 @@ cd member3_flutter_frontend
 flutter test
 ```
 
-## 📊 Monitoring & Analytics
+## Monitoring & Analytics
 
 ### System Health
 - Visit `http://localhost:8000/health` for system status
@@ -167,7 +174,7 @@ flutter test
 - Mirage activation statistics
 - Personal threshold evolution
 
-## 🔒 Security Features
+## Security Features
 
 ### Privacy Protection
 - All behavioral data processed locally
@@ -181,7 +188,7 @@ flutter test
 - Tamper detection and response
 - Cognitive challenge verification
 
-## 🏆 Why NETHRA Wins
+## Why NETHRA?
 
 - **Adaptive Intelligence**: Replaces rigid rule-based systems with AI-driven behavior modeling
 - **Deception Technology**: Combines mirage interfaces with machine learning for smarter fraud prevention
@@ -190,11 +197,11 @@ flutter test
 - **Complete Integration**: Functional backend-frontend integration with beautiful UI
 - **Production Ready**: Clean architecture, comprehensive documentation, and demo readiness
 
-## 📝 License
+## License
 
 MIT License - see LICENSE file for details
 
-## 🤝 Contributing
+## Contributing
 
 This is a hackathon project demonstrating advanced AI security concepts. The codebase showcases:
 - Real-time behavioral biometrics
